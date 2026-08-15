@@ -106,9 +106,23 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('API Error:', error);
+
+    const isDbUnavailable =
+      error instanceof Error &&
+      (
+        error.message.includes('Failed to connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('ESOCKET') ||
+        error.message.includes('Connection is closed')
+      );
+
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      {
+        error: isDbUnavailable
+          ? 'Database is unavailable. Start SQL Server on localhost:1433 (or update DB_PORT) and ensure the database is seeded.'
+          : 'Internal server error',
+      },
+      { status: isDbUnavailable ? 503 : 500 }
     );
   }
 }

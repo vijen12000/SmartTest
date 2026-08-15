@@ -16,12 +16,18 @@ interface QuestionBankProps {
   defaultTrimesterId?: string;
   defaultSubjectId?: string;
   defaultTestId?: string;
+  onSelectionChange?: (selection: {
+    trimesterId: string;
+    subjectId: string;
+    subjectName: string;
+  }) => void;
 }
 
 export function QuestionBank({
   defaultTrimesterId = 'trimester-2',
   defaultSubjectId = 'da-105-linear-algebra',
   defaultTestId = 'pt-6',
+  onSelectionChange,
 }: QuestionBankProps) {
   const [catalog, setCatalog] = useState<QuestionBankType>(emptyCatalog);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -279,11 +285,25 @@ export function QuestionBank({
     setQuestions([]);
     setAnswers({});
     setSubmitMessage(null);
+
+    const nextSubject = catalog.trimesters.find((trimester) => trimester.id === trimesterId)?.subjects[0];
+    onSelectionChange?.({
+      trimesterId,
+      subjectId: nextSubject?.id || '',
+      subjectName: nextSubject?.name || '',
+    });
   };
 
   const handleSubjectChange = (subjectId: string) => {
     setSelectedSubjectId(subjectId);
     setSelectedTestId('');
+
+    const nextSubject = availableSubjects.find((subject) => subject.id === subjectId);
+    onSelectionChange?.({
+      trimesterId: selectedTrimesterId,
+      subjectId,
+      subjectName: nextSubject?.name || '',
+    });
   };
 
   const handleTestChange = (testId: string) => {
@@ -330,6 +350,16 @@ export function QuestionBank({
       ...current,
       [trimesterId]: true,
     }));
+
+    const nextSubject = catalog.trimesters
+      .find((trimester) => trimester.id === trimesterId)
+      ?.subjects.find((subject) => subject.id === subjectId);
+
+    onSelectionChange?.({
+      trimesterId,
+      subjectId,
+      subjectName: nextSubject?.name || '',
+    });
   };
 
   const handleSubmit = async () => {

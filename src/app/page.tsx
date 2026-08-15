@@ -1,6 +1,47 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { GradeModule } from '@/components/GradeModule';
 import { QuestionBank } from '@/components/QuestionBank';
 
+const mapTrimesterIdToLabel = (trimesterId?: string) => {
+  const match = trimesterId?.match(/(\d+)/);
+  const trimesterNumber = match ? Number(match[1]) : 1;
+  return `Trimester ${trimesterNumber}`;
+};
+
 export default function Home() {
+  const [selectedTrimesterId, setSelectedTrimesterId] = useState('trimester-2');
+  const [selectedSubjectId, setSelectedSubjectId] = useState('da-105-linear-algebra');
+  const [selectedSubjectName, setSelectedSubjectName] = useState('DA105 Linear Algebra');
+
+  const selectedTrimesterLabel = useMemo(
+    () => mapTrimesterIdToLabel(selectedTrimesterId),
+    [selectedTrimesterId]
+  );
+
+  const handleQuestionBankSelection = ({
+    trimesterId,
+    subjectId,
+    subjectName,
+  }: {
+    trimesterId: string;
+    subjectId: string;
+    subjectName: string;
+  }) => {
+    if (trimesterId) {
+      setSelectedTrimesterId(trimesterId);
+    }
+
+    if (subjectId) {
+      setSelectedSubjectId(subjectId);
+    }
+
+    if (subjectName) {
+      setSelectedSubjectName(subjectName);
+    }
+  };
+
   return (
     <div id="wrapper" className="d-flex">
       <aside className="sb-sidebar bg-gradient-primary d-flex flex-column p-3 text-white">
@@ -20,15 +61,28 @@ export default function Home() {
         <div id="content">
           <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow-sm">
             <div className="container-fluid">
-              <span className="navbar-brand m-0 h5 text-primary fw-bold">Data Science and AI Study</span>              
+              <span className="navbar-brand m-0 h5 text-primary fw-bold">Data Science and AI Study</span>
             </div>
           </nav>
 
           <main className="container-fluid pb-4">
+            <GradeModule
+              initialTrimester={selectedTrimesterLabel}
+              initialSubject={selectedSubjectName}
+              onTrimesterChange={(nextTrimester) => {
+                const match = nextTrimester.match(/(\d+)/);
+                if (match) {
+                  const nextTrimesterId = `trimester-${match[1]}`;
+                  setSelectedTrimesterId(nextTrimesterId);
+                }
+              }}
+              onSubjectChange={(nextSubject) => setSelectedSubjectName(nextSubject)}
+            />
             <QuestionBank
-              defaultTrimesterId="trimester-2"
-              defaultSubjectId="trimester-2-da105"
+              defaultTrimesterId={selectedTrimesterId}
+              defaultSubjectId={selectedSubjectId}
               defaultTestId="pt-6"
+              onSelectionChange={handleQuestionBankSelection}
             />
           </main>
         </div>

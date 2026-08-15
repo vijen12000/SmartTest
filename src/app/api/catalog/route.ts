@@ -92,6 +92,15 @@ export async function GET() {
   } catch (error) {
     console.error('Catalog API error:', error);
 
+    const isDbUnavailable =
+      error instanceof Error &&
+      (
+        error.message.includes('Failed to connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('ESOCKET') ||
+        error.message.includes('Connection is closed')
+      );
+
     if (error instanceof Error && error.message.includes("Invalid object name 'Trimesters'")) {
       return NextResponse.json(
         {
@@ -99,6 +108,16 @@ export async function GET() {
           ...emptyCatalog,
         },
         { status: 500 }
+      );
+    }
+
+    if (isDbUnavailable) {
+      return NextResponse.json(
+        {
+          error: 'Database is unavailable. Start SQL Server on localhost:1433 (or update DB_PORT) and ensure the database is seeded.',
+          ...emptyCatalog,
+        },
+        { status: 503 }
       );
     }
 

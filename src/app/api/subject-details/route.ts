@@ -82,6 +82,23 @@ export async function GET(request: NextRequest) {
     } satisfies SubjectDetails);
   } catch (error) {
     console.error('Subject details API error:', error);
-    return NextResponse.json({ error: 'Failed to load subject details' }, { status: 500 });
+
+    const isDbUnavailable =
+      error instanceof Error &&
+      (
+        error.message.includes('Failed to connect') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('ESOCKET') ||
+        error.message.includes('Connection is closed')
+      );
+
+    return NextResponse.json(
+      {
+        error: isDbUnavailable
+          ? 'Database is unavailable. Start SQL Server on localhost:1433 (or update DB_PORT) and ensure the database is seeded.'
+          : 'Failed to load subject details',
+      },
+      { status: isDbUnavailable ? 503 : 500 }
+    );
   }
 }
